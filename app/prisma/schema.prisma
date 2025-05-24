@@ -1,0 +1,128 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+    output = "/home/ubuntu/cash_home_buyers/node_modules/.prisma/client"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(cuid())
+  name           String?
+  email          String    @unique
+  emailVerified  DateTime?
+  hashedPassword String?
+  image          String?
+  role           Role      @default(USER)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  savedProperties SavedProperty[]
+  searchAlerts    SearchAlert[]
+  leads           Lead[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Property {
+  id               String   @id @default(cuid())
+  title            String
+  description      String
+  price            Float
+  address          String
+  city             String   @default("Richmond")
+  state            String   @default("VA")
+  zipCode          String
+  neighborhood     String
+  propertyType     String
+  bedrooms         Int
+  bathrooms        Float
+  squareFeet       Int
+  yearBuilt        Int
+  features         String[]
+  status           String   @default("AVAILABLE")
+  isOffMarket      Boolean  @default(true)
+  isDistressed     Boolean  @default(false)
+  distressedType   String?
+  discountPercentage Float?
+  rentalYield      Float?
+  potentialROI     Float?
+  images           String[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  savedBy         SavedProperty[]
+}
+
+model SavedProperty {
+  id         String   @id @default(cuid())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  propertyId String
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, propertyId])
+}
+
+model SearchAlert {
+  id           String   @id @default(cuid())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  name         String
+  minPrice     Float?
+  maxPrice     Float?
+  propertyType String?
+  neighborhood String?
+  bedrooms     Int?
+  bathrooms    Float?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Lead {
+  id          String   @id @default(cuid())
+  name        String
+  email       String
+  phone       String?
+  message     String?
+  propertyId  String?
+  source      String?
+  status      String   @default("NEW")
+  user        User?    @relation(fields: [userId], references: [id])
+  userId      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  name      String
+  role      String?
+  content   String
+  rating    Int
+  image     String?
+  createdAt DateTime @default(now())
+}
+
+model Resource {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  category    String
+  content     String
+  image       String?
+  downloadUrl String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
